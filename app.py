@@ -24,12 +24,11 @@ st.header("""
             A simple web app to detect if a given document or a web article is true or fake.""")
 
 st.markdown("""        
-            The app is based on BERTopic, a topic modeling technique that leverages BERT embeddings and c-TF-IDF to create dense clusters allowing for easily interpretable topics whilst keeping important words in the topic descriptions.
+            This demo app is based on BERTopic, a topic modeling technique that leverages BERT embeddings and c-TF-IDF to create dense clusters allowing for easily interpretable topics whilst keeping important words in the topic descriptions.
             
-            The models were trained on Misinfo dataset from Kaggle, based on EUvsDisinfo data.
-            This application seeks to combine unsupervised and supervised learning techniques to detect fake news. Two models were trained based on fake and true news datasets, and topics were generated. Prediction can be done by modeling the topic of the input and compared to the topics clustered by the model based on the two datasets. If the input topic is similar to the topics in the fake news dataset, the input is predicted to be fake, and vice versa.                      
+            The models were trained on Misinfo dataset from Kaggle, based on EUvsDisinfo data, using miniLM Sentence Transformer embedding. This application seeks to combine unsupervised and supervised learning techniques to detect fake news. Two models were trained based on fake and true news datasets, and topics were generated. Prediction is done by modeling the topic of the input and compared to the topics clustered by the model based on the two datasets. If the input topic is similar to the topics in the fake news dataset, the input is predicted to be fake, and vice versa.                      
             
-            At the moment, the accuracy in prediction is not too high due to the limited training data, but is is showing promise. Therefore, it can be further improved upon by continually adding more data to the training set. 
+            At the moment, the accuracy in prediction of this demo app is not too high due to the limited hosting space and training data, but is is showing promise. Better embedding models can give much better predictions, but it goes over the limit of Streamlit Community Cloud. Performance can also be further improved upon by continually adding more data to the training set. 
             """)
 
 # Function for models loading:
@@ -43,9 +42,10 @@ def download_and_cache_models():
     #gdown.download(id = "1Bt7LDObSscall84N344uwkXhJIxXfsHZ", output = "misinfo-true-pickle", quiet=False)  
         
     # Load models. Loading without embedding made things worse, but it's not possible to do otherwise with streamlit sharing:
-    sentence_model = SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
-    topic_model_fake = BERTopic.load("misinfo-fake-model.pickle", embedding_model= sentence_model)
-    topic_model_true = BERTopic.load("misinfo-true-model.pickle", embedding_model= sentence_model)
+    #sentence_model = SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
+    sentence_model = SentenceTransformer("all-MiniLM-L6-v2")
+    topic_model_fake = BERTopic.load("misinfo-fake-minilm.pickle", embedding_model= sentence_model)
+    topic_model_true = BERTopic.load("misinfo-true-minilm.pickle", embedding_model= sentence_model)
 
     return topic_model_fake, topic_model_true, sentence_model
 
@@ -155,6 +155,7 @@ def scrape_webpages(urls):
     df = pd.DataFrame(data)
     return df
 
+# Visualisation functions: just use BERTopic's visualisation functions
 
 from requests.exceptions import MissingSchema
 
