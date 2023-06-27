@@ -41,8 +41,8 @@ def download_and_cache_models():
     This function returns 2 BERTopic models, one trained on fake news and one trained on true news.
     The models were trained on Misinfo dataset from Kaggle, based on EUvsDisinfo data.
     Models are cached so they don't have to be downloaded each time."""
-    gdown.download(id = "1fpZk3hgie8Ir9tLNQ3fKj16LRRBePpL1", output = "misinfo-fake-pickle", quiet=False)
-    gdown.download(id = "1R94yOcKk0XO2B311WxBYuVqLiHjYerOs", output = "misinfo-true-pickle", quiet=False)  
+    gdown.download(id = "1XJfCt7PFm0LlZBMDKJF-9BvukG8Pj0Yo", output = "misinfo-fake-pickle", quiet=False)
+    gdown.download(id = "1Bt7LDObSscall84N344uwkXhJIxXfsHZ", output = "misinfo-true-pickle", quiet=False)  
         
     # Load models:
     topic_model_fake = BERTopic.load("misinfo-fake-pickle")
