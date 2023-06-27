@@ -45,9 +45,10 @@ def download_and_cache_models():
     gdown.download(id = "1Bt7LDObSscall84N344uwkXhJIxXfsHZ", output = "misinfo-true-pickle", quiet=False)  
         
     # Load models:
-    topic_model_fake = BERTopic.load("misinfo-fake-pickle")
-    topic_model_true = BERTopic.load("misinfo-true-pickle")
     sentence_model = SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
+    topic_model_fake = BERTopic.load("misinfo-fake-pickle", embedding_model= sentence_model)
+    topic_model_true = BERTopic.load("misinfo-true-pickle", embedding_model= sentence_model)
+
 
     return topic_model_fake, topic_model_true, sentence_model
 
