@@ -23,17 +23,17 @@ st.title("Fake news detection using BERTopic")
 st.header("""
             A simple web app to detect if a given document or a web article is true or fake.""")
 
-st.text("""        
+st.markdown("""        
             The app is based on BERTopic, a topic modeling technique that leverages BERT embeddings and c-TF-IDF to create dense clusters allowing for easily interpretable topics whilst keeping important words in the topic descriptions.
             
             The models were trained on Misinfo dataset from Kaggle, based on EUvsDisinfo data.
             This application seeks to combine unsupervised and supervised learning techniques to detect fake news. Two models were trained based on fake and true news datasets, and topics were generated. Prediction can be done by modeling the topic of the input and compared to the topics clustered by the model based on the two datasets. If the input topic is similar to the topics in the fake news dataset, the input is predicted to be fake, and vice versa.                      
             
-            At the moment, the accuracy in prediction is not too high due to the limited training data, and therefore, can be further improved upon by continually adding more data to the training set. 
+            At the moment, the accuracy in prediction is not too high due to the limited training data, but is is showing promise. Therefore, it can be further improved upon by continually adding more data to the training set. 
             """)
 
 # Function for models loading:
-@st.cache_resource() # Cache the model so it doesn't have to be loaded each time
+@st.cache_resource # Cache the model so it doesn't have to be loaded each time
 def download_and_cache_models():
     """Download pre-trained models from Google Drive.
     This function returns 2 BERTopic models, one trained on fake news and one trained on true news.
@@ -42,7 +42,7 @@ def download_and_cache_models():
     #gdown.download(id = "1XJfCt7PFm0LlZBMDKJF-9BvukG8Pj0Yo", output = "misinfo-fake-pickle", quiet=False)
     #gdown.download(id = "1Bt7LDObSscall84N344uwkXhJIxXfsHZ", output = "misinfo-true-pickle", quiet=False)  
         
-    # Load models:
+    # Load models. Loading without embedding made things worse, but it's not possible to do otherwise with streamlit sharing:
     sentence_model = SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
     topic_model_fake = BERTopic.load("misinfo-fake-model.pickle", embedding_model= sentence_model)
     topic_model_true = BERTopic.load("misinfo-true-model.pickle", embedding_model= sentence_model)
@@ -194,4 +194,3 @@ if st.button("Predict"):
             st.dataframe(documents)
     else:
         st.write("Please upload pdf files and/or enter urls.")
-
