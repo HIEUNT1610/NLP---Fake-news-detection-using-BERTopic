@@ -18,18 +18,16 @@ from bs4 import BeautifulSoup
 from io import BytesIO
 
 # Title and Layout:
+st.set_page_config(page_title="Fake news detection using BERTopic", layout="wide")
 st.title("Fake news detection using BERTopic")
-st.markdown("""
-            This is a simple web app to predict if a given document or a web article is true or fake.
-            
+st.header("""
+            A simple web app to detect if a given document or a web article is true or fake.""")
+
+st.text("""        
             The app is based on BERTopic, a topic modeling technique that leverages BERT embeddings and c-TF-IDF to create dense clusters allowing for easily interpretable topics whilst keeping important words in the topic descriptions.
             
             The models were trained on Misinfo dataset from Kaggle, based on EUvsDisinfo data.
-            This application seeks to combine unsupervised and supervised learning techniques to detect fake news. 
-            
-            This web app allows a rudimentary detection of fake news based on topic modeling. Two models were trained based on fake and true news datasets, and topics were generated. Prediction can be done by modeling the topic of the input and compared to the topics clustered by the model based on the two datasets. 
-            
-            Users can simply upload pdf files or input the url of a web article to get the prediction.
+            This application seeks to combine unsupervised and supervised learning techniques to detect fake news. Two models were trained based on fake and true news datasets, and topics were generated. Prediction can be done by modeling the topic of the input and compared to the topics clustered by the model based on the two datasets. If the input topic is similar to the topics in the fake news dataset, the input is predicted to be fake, and vice versa.                      
             
             At the moment, the accuracy in prediction is not too high due to the limited training data, and therefore, can be further improved upon by continually adding more data to the training set. 
             """)
@@ -41,20 +39,22 @@ def download_and_cache_models():
     This function returns 2 BERTopic models, one trained on fake news and one trained on true news.
     The models were trained on Misinfo dataset from Kaggle, based on EUvsDisinfo data.
     Models are cached so they don't have to be downloaded each time."""
-    gdown.download(id = "1XJfCt7PFm0LlZBMDKJF-9BvukG8Pj0Yo", output = "misinfo-fake-pickle", quiet=False)
-    gdown.download(id = "1Bt7LDObSscall84N344uwkXhJIxXfsHZ", output = "misinfo-true-pickle", quiet=False)  
+    #gdown.download(id = "1XJfCt7PFm0LlZBMDKJF-9BvukG8Pj0Yo", output = "misinfo-fake-pickle", quiet=False)
+    #gdown.download(id = "1Bt7LDObSscall84N344uwkXhJIxXfsHZ", output = "misinfo-true-pickle", quiet=False)  
         
     # Load models:
     sentence_model = SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
-    topic_model_fake = BERTopic.load("misinfo-fake-pickle", embedding_model= sentence_model)
-    topic_model_true = BERTopic.load("misinfo-true-pickle", embedding_model= sentence_model)
-
+    topic_model_fake = BERTopic.load("misinfo-fake-model.pickle", embedding_model= sentence_model)
+    topic_model_true = BERTopic.load("misinfo-true-model.pickle", embedding_model= sentence_model)
 
     return topic_model_fake, topic_model_true, sentence_model
 
 # Funny loading animation:
 def start_app():
-    with st.spinner("Loading model. Please hold..."):
+    st.subheader("How to use this app:")  
+    st.markdown("""  
+            Users can simply upload pdf files or input the url of a web article to get the prediction.""")
+    with st.spinner("Loading model. Please read descriptions in the meantime..."):
         topic_model_fake, topic_model_true, sentence_model = download_and_cache_models()
     return topic_model_fake, topic_model_true, sentence_model
 
@@ -91,7 +91,7 @@ def extract_text_from_pdfs(uploaded_files):
 
 
 # Function for prediction:
-def predict_topic(documents, topic_model_fake, topic_model_true, sentence_model):
+def predict(documents, topic_model_fake, topic_model_true, sentence_model):
     """This function takes in a list of pdf files and prints out the predicted topics based on the trained models.
     documents: a dataframe with 2 columns: name and text
     topic_model_fake: the trained topic model for fake news, imported from pickle
@@ -163,6 +163,7 @@ from requests.exceptions import MissingSchema
 topic_model_fake, topic_model_true, sentence_model = start_app()
 documents = pd.DataFrame(columns=["file", "text"])
 
+st.subheader("File uploader / URL scraper")
 # File uploader:
 pdf_files = st.file_uploader("Upload pdf files", type=["pdf"],
                                accept_multiple_files=True)
@@ -181,12 +182,13 @@ if urls:
         st.error(f"Invalid URL: {e}. Please enter a valid URL with a schema (e.g. http:// or https://).")
     else:
         documents = pd.concat([documents, url_documents], ignore_index=True)
+
 # Perform prediction:
 if st.button("Predict"):
     if not documents.empty:
         with st.spinner("Predicting. Please hold..."):
             st.write("Predicting true or fake: \n")
-            result_str = predict_topic(documents, topic_model_fake, topic_model_true, sentence_model)
+            result_str = predict(documents, topic_model_fake, topic_model_true, sentence_model)
             documents["result"] = result_str
             documents = documents[["file", "prediction", "result"]]
             st.dataframe(documents)
