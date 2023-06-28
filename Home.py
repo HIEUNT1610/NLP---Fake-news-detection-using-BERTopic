@@ -21,7 +21,7 @@ from io import BytesIO
 st.set_page_config(page_title="Fake news detection using BERTopic", layout="wide")
 st.title("Fake news detection using BERTopic")
 st.header("""
-            A simple web app to detect if a given document or a web article is true or fake.""")
+            A simple web app to detect if a given document or a web article belongs to a common fake news topic or not.""")
 
 st.markdown("""        
             This demo app is based on BERTopic, a topic modeling technique that leverages BERT embeddings and c-TF-IDF to create dense clusters allowing for easily interpretable topics whilst keeping important words in the topic descriptions.
@@ -104,19 +104,19 @@ def predict(documents, topic_model_fake, topic_model_true, sentence_model):
             result_str.append("Model could not predict reliably if the document is true or fake based on training data.\n")
         # if predicted topic in true model but not in fake model    
         elif topic_model_true.get_topic(test_topics_true[i]) and not topic_model_fake.get_topic(test_topics_fake[i]):
-            documents["prediction"][i] = "True"            
+            documents["prediction"][i] = "Not in fake news topics"            
             result_str.append(f"In topic {topic_model_true.topic_labels_[test_topics_true[i]]} at {test_probs_true[i][test_topics_true[i]]*100:0.4f}%.\n")
         # if predicted topic in fake model but not in true model    
         elif topic_model_fake.get_topic(test_topics_fake[i]) and not topic_model_true.get_topic(test_topics_true[i]):
-            documents["prediction"][i] = "Fake"
+            documents["prediction"][i] = "In common fake news topics"
             result_str.append(f"In the topic {topic_model_fake.topic_labels_[test_topics_fake[i]]} at {test_probs_fake[i][test_topics_fake[i]]*100:0.4f}%.\n")
         # if predicted topic in both models
         else:
             if test_probs_true[i][test_topics_true[i]] > test_probs_fake[i][test_topics_fake[i]]:
-                documents["prediction"][i] = "True"
+                documents["prediction"][i] = "Not in fake news topics"
                 result_str.append(f"In the topic {topic_model_true.topic_labels_[test_topics_true[i]]} at {test_probs_true[i][test_topics_true[i]]*100:0.4f}%.\n")
             else:
-                documents["prediction"][i] = "Fake"
+                documents["prediction"][i] = "In common fake news topics"
                 result_str.append(f"In the topic {topic_model_fake.topic_labels_[test_topics_fake[i]]} at {test_probs_fake[i][test_topics_fake[i]]*100:0.4f}%.\n")
     
     return result_str
@@ -178,7 +178,7 @@ if urls:
 if st.button("Predict"):
     if not documents.empty:
         with st.spinner("Predicting. Please hold..."):
-            st.write("Predicting true or fake: \n")
+            st.write("Predicting if documents are in common fake news topic or not: \n")
             result_str = predict(documents, topic_model_fake, topic_model_true, sentence_model)
             documents["result"] = result_str
             documents = documents[["file", "prediction", "result"]]

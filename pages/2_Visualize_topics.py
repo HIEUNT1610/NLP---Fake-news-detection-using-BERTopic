@@ -6,8 +6,8 @@ from Home import topic_model_fake, topic_model_true
 #st.set_page_config(page_title="Fake news detection using BERTopic", layout="wide")
 st.title("Fake news detection using BERTopic")
 st.header("""
-            A simple web app to detect if a given document or a web article is true or fake.
-            """)
+            A simple web app to detect if a given document or a web article belongs to a common fake news topic or not.""")
+
 
 # In here we are just going to show the visualizations of the topics. We will use the same models as in the Home.py file.
 st.subheader("Visualizations of the trained topics:")
