@@ -201,7 +201,7 @@ if st.button("Predict"):
             result_str = predict(documents, topic_model_fake, topic_model_true, sentence_model)
             documents["result"] = result_str
             documents = documents[["file", "prediction", "result"]]
-            st.dataframe(documents)
+            st.dataframe(documents, use_container_width=True)
     else:
         st.write("Please upload pdf files and/or enter urls.")
         
