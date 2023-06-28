@@ -26,9 +26,12 @@ st.header("""
 st.markdown("""        
             This demo app is based on BERTopic, a topic modeling technique that leverages BERT embeddings and c-TF-IDF to create dense clusters allowing for easily interpretable topics whilst keeping important words in the topic descriptions.
             """)
+st.subheader("How to use this app:")  
+st.markdown("""  
+            Users can simply upload PDF files or input the URLs of web articles to detect.""")
 
 # Function for models loading:
-@st.cache_resource # Cache the model so it doesn't have to be loaded each time
+@st.cache_resource(ttl=3600) # Cache the model so it doesn't have to be loaded each time. Limit to 1 hour.
 def download_and_cache_models():
     """Download pre-trained models from Google Drive.
     This function returns 2 BERTopic models, one trained on fake news and one trained on true news.
@@ -45,18 +48,8 @@ def download_and_cache_models():
 
     return topic_model_fake, topic_model_true, sentence_model
 
-# Funny loading animation:
-def start_app():
-    st.subheader("How to use this app:")  
-    st.markdown("""  
-            Users can simply upload PDF files or input the URLs of web articles to detect.""")
-    with st.spinner("Loading model. Please read descriptions in the meantime..."):
-        topic_model_fake, topic_model_true, sentence_model = download_and_cache_models()
-    return topic_model_fake, topic_model_true, sentence_model
-
 # Functions for reading pdf files:
 from io import BytesIO
-
 def read_pdf(uploaded_file):
     reader = PdfReader(BytesIO(uploaded_file.read()))
     text = ""
@@ -157,7 +150,8 @@ from requests.exceptions import MissingSchema
 
 # Scripts for the app:
 # Loading models:
-topic_model_fake, topic_model_true, sentence_model = start_app()
+with st.spinner("Loading model. Please read descriptions in the meantime..."):
+    topic_model_fake, topic_model_true, sentence_model = download_and_cache_models()
 documents = pd.DataFrame(columns=["file", "text"])
 
 st.subheader("File uploader / URL scraper")
