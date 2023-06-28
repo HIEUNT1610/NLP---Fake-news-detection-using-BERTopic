@@ -25,10 +25,6 @@ st.header("""
 
 st.markdown("""        
             This demo app is based on BERTopic, a topic modeling technique that leverages BERT embeddings and c-TF-IDF to create dense clusters allowing for easily interpretable topics whilst keeping important words in the topic descriptions.
-            
-            The models were trained on Misinfo dataset from Kaggle, based on EUvsDisinfo data, using miniLM Sentence Transformer embedding. This application seeks to combine unsupervised and supervised learning techniques to detect fake news. Two models were trained based on fake and true news datasets, and topics were generated. Prediction is done by modeling the topic of the input and compared to the topics clustered by the model based on the two datasets. If the input topic is similar to the topics in the fake news dataset, the input is predicted to be fake, and vice versa.                      
-            
-            At the moment, the accuracy in prediction of this demo app is not too high due to the limited hosting space and training data, but is is showing promise. Better embedding models can give much better predictions, but it goes over the limit of Streamlit Community Cloud. Performance can also be further improved upon by continually adding more data to the training set. 
             """)
 
 # Function for models loading:
@@ -53,7 +49,7 @@ def download_and_cache_models():
 def start_app():
     st.subheader("How to use this app:")  
     st.markdown("""  
-            Users can simply upload pdf files or input the url of a web article to get the prediction.""")
+            Users can simply upload PDF files or input the URLs of web articles to detect.""")
     with st.spinner("Loading model. Please read descriptions in the meantime..."):
         topic_model_fake, topic_model_true, sentence_model = download_and_cache_models()
     return topic_model_fake, topic_model_true, sentence_model
@@ -166,14 +162,14 @@ documents = pd.DataFrame(columns=["file", "text"])
 
 st.subheader("File uploader / URL scraper")
 # File uploader:
-pdf_files = st.file_uploader("Upload pdf files", type=["pdf"],
+pdf_files = st.file_uploader("Upload PDF files", type=["pdf"],
                                accept_multiple_files=True)
 if pdf_files: 
-    with st.spinner("Processing pdf…"): 
+    with st.spinner("Processing PDF files..."): 
         documents = extract_text_from_pdfs(pdf_files)
     
 # Text input for urls:
-urls = st.text_input("Enter urls separated by commas")
+urls = st.text_input("Enter URLs, separated by commas")
 if urls:
     urls = [url.strip() for url in urls.split(',')]
     try:
