@@ -24,11 +24,13 @@ st.header("""
             A simple web app to detect if a given document or a web article belongs to a common fake news topic or not.""")
 
 st.markdown("""        
-            This demo app is based on BERTopic, a topic modeling technique that leverages BERT embeddings and c-TF-IDF to create dense clusters allowing for easily interpretable topics whilst keeping important words in the topic descriptions.
+            This demo app is based on BERTopic, a topic modeling technique that leverages BERT embeddings and c-TF-IDF to create dense clusters allowing for easily interpretable topics whilst keeping important words in the topic descriptions. The topics for the input documents are generated based on the content using Sentence Transformers, and are compared to the topics of fake news and true news from the MisInfo Kaggle dataset. The detection is based on the similarity between the input document and the fake news topics. This demo app provides a quick detection tool, but it does not fact check the input documents. For more details, please refer to the About page and the Visualization part.
             """)
 st.subheader("How to use this app:")  
 st.markdown("""  
-            Users can simply upload PDF files or input the URLs of web articles to detect.""")
+            Users can simply upload PDF files or input the URLs of web articles to start detection.
+            Please ensure that URLs are not behind paywalls, or the app will not be able to access the content.
+            """)
 
 # Function for models loading:
 @st.cache_resource(ttl=3600) # Cache the model so it doesn't have to be loaded each time. Limit to 1 hour.
@@ -100,7 +102,7 @@ def predict(documents, topic_model_fake, topic_model_true, sentence_model):
     for i in range(len(documents['text'].tolist())):
         # if both models cannot predict the document
         if not topic_model_true.get_topic(test_topics_true[i]) and not topic_model_fake.get_topic(test_topics_fake[i]):
-            documents["prediction"][i] = "Not sure"
+            documents["prediction"][i] = "Not in fake news topics"
             result_str.append("Model could not predict reliably if the document is true or fake based on training data.\n")
         # if predicted topic in true model but not in fake model    
         elif topic_model_true.get_topic(test_topics_true[i]) and not topic_model_fake.get_topic(test_topics_fake[i]):
@@ -207,6 +209,7 @@ if st.button("Predict"):
         
 # In here we are just going to show the visualizations of the topics. We will use the same models as in the Home.py file.
 st.subheader("Visualizations of the trained topics:")
+st.markdown("In this section you can see the visualizations of the trained topics. The topics are generated from the fake news dataset and the true news dataset. The visualizations are made with the BERTopic package, and you can check Top 30 topics, Topic distribution, and Topic hierarchy.")
 st.markdown("Which type of visualization would you like to see?")
 option1 = st.selectbox("Select model:", (" ", "Fake news", "True news"))
 option2 = st.selectbox("Select visualization:", (" ", "Top 30 topics", "Topic distribution", "Topic hierarchy"))
