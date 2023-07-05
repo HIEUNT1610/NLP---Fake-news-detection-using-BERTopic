@@ -198,8 +198,8 @@ if urls:
 # Perform prediction:
 if st.button("Predict"):
     if not documents.empty:
-        with st.spinner("Predicting. Please hold..."):
-            st.write("Predicting if documents are in common fake news topic or not: \n")
+        with st.spinner("Detecting. Please hold..."):
+            st.write("Detecting if documents are in common fake news topic or not: \n")
             result_str = predict(documents, topic_model_fake, topic_model_true, sentence_model)
             documents["result"] = result_str
             documents = documents[["file", "prediction", "result"]]
