@@ -21,10 +21,12 @@ from io import BytesIO
 st.set_page_config(page_title="Fake news detection using BERTopic", layout="wide")
 st.title("Fake news detection using BERTopic")
 st.header("""
-            A simple web app to detect if a given document or a web article belongs to a common fake news topic or not.""")
+            A simple demo to detect if a given document or a web article belongs to a common fake news topic or not.""")
 
 st.markdown("""        
-            This demo app is based on BERTopic, a topic modeling technique that leverages BERT embeddings and c-TF-IDF to create dense clusters allowing for easily interpretable topics whilst keeping important words in the topic descriptions. The topics for the input documents are generated based on the content using Sentence Transformers, and are compared to the topics of fake news and true news from the MisInfo Kaggle dataset. The detection is based on the similarity between the input document and the fake news topics. This demo app provides a quick detection tool, but it does not fact check the input documents. For more details, please refer to the About page and the Visualization part.
+            This demo app is based on BERTopic, a topic modeling technique that leverages BERT embeddings and c-TF-IDF to create dense clusters allowing for easily interpretable topics whilst keeping important words in the topic descriptions. The topics for the input documents are generated based on the content using a combination of topic modelling techniques, and are compared to the topics of fake news and true news from the MisInfo Kaggle dataset. The detection is based on the similarity between the input document and the fake news topics, using a simple decision tree using the ground truth provided by the dataset. 
+            
+            This demo app's purpose is to: (i) provide a quick detection tool for further analysis; (ii) demonstrate my ability in looking at a problem and creating a solution from end to end. For more details, please refer to the About page.
             """)
 st.subheader("How to use this app:")  
 st.markdown("""  
