@@ -16,22 +16,128 @@ import os
 import requests
 from bs4 import BeautifulSoup
 from io import BytesIO
+import torch
+import matplotlib.pyplot as plt
 
 # Title and Layout:
 st.set_page_config(page_title="Fake news detection using BERTopic", layout="wide")
 st.title("Fake news detection using BERTopic")
 st.header("""
-            A simple web app to detect if a given document or a web article belongs to a common fake news topic or not.""")
+            A simple demo to detect if a given document or a web article belongs to a common fake news topic or not.""")
 
 st.markdown("""        
-            This demo app is based on BERTopic, a topic modeling technique that leverages BERT embeddings and c-TF-IDF to create dense clusters allowing for easily interpretable topics whilst keeping important words in the topic descriptions. The topics for the input documents are generated based on the content using Sentence Transformers, and are compared to the topics of fake news and true news from the MisInfo Kaggle dataset. The detection is based on the similarity between the input document and the fake news topics. This demo app provides a quick detection tool, but it does not fact check the input documents. For more details, please refer to the About page and the Visualization part.
+            This demo app is based on BERTopic, a topic modeling technique that leverages BERT embeddings and c-TF-IDF to create dense clusters allowing for easily interpretable topics whilst keeping important words in the topic descriptions. The topics for the input documents are generated based on the content using a combination of topic modelling techniques, and are compared to the topics of fake news and true news from the MisInfo Kaggle dataset. The detection is based on the similarity between the input document and the fake news topics, using a simple neural network trained on the ground truth provided by the dataset. 
+            
+            This demo app's purpose is to: (i) provide a quick detection tool for further analysis; (ii) demonstrate my ability in looking at a problem and creating a solution from end to end. For more details, please refer to the About page.
             """)
 st.subheader("How to use this app:")  
 st.markdown("""  
             Users can simply upload PDF files or input the URLs of web articles to start detection.
-            Please ensure that URLs are not behind paywalls, or the app will not be able to access the content.
+            Please ensure that URLs are not behind paywalls, or the app will not be able to access the content and will not be able to accurately model the topic of the documents.
             """)
 
+# Fake Detect model:
+# Initalize a MLP for binary classification using PyTorch with 1 hidden layer of 100 neurons
+class FakeDetect(torch.nn.Module):
+    def __init__(self, early_stop = False, epoch = 50, batch_size = 32):
+        super(FakeDetect, self).__init__()
+        input_dim = 768 #2 times of the embedding dimension
+        hidden_dim = 100
+        output_dim = 2
+        self.linear1 = torch.nn.Linear(input_dim, hidden_dim) #[768, 100]
+        self.linear2 = torch.nn.Linear(hidden_dim, output_dim) #[100, 2]
+        self.sigmoid = torch.nn.Sigmoid() # Sigmoid for binary classification
+        self.activation = torch.nn.ReLU()
+        self.early_stop = early_stop
+        self.epoch = epoch
+        self.batch_size = batch_size
+        self.loss_function = torch.nn.CrossEntropyLoss()
+        self.optimizer = torch.optim.Adam(self.parameters(), lr = 0.001)
+
+        
+    def forward(self, x):
+        out = self.linear1(x) # [batch_size, X.shape[1]] . [X.shape[1], 100] = [batch_size, 100]
+        out = self.activation(out) # [batch_size, 100]
+        out = self.linear2(out) # [batch_size, 100] . [100, 2] = [batch_size, 2]
+        out = self.sigmoid(out) # [batch_size, 2]
+        return out
+    
+    def fit(self, X_train, y_train, X_val, y_val):
+        """ 
+        This function trains the model.
+        It takes as inputs the training data and the validation data, and returns the accuracy of the model on validation set.
+        """
+        train_losses = []
+        for epoch in range(self.epoch):
+            print('Epoch:', epoch)
+            epoch_loss = 0
+            i = 0
+            while i < len(X_train):
+                X_batch = X_train[i:i+32]
+                y_batch = y_train[i:i+32]
+                i += 32
+                # Zero the gradients
+                optimizer = self.optimizer
+                optimizer.zero_grad()
+                # Forward pass
+                output = self.forward(X_batch)
+                # Calculate the loss
+                loss = self.loss_function(output, y_batch.long())
+                epoch_loss += loss.item()
+                loss.backward()
+                # Update the weights
+                optimizer.step()
+            print("Loss on training set at epoch %d : %f" %(epoch, epoch_loss))
+            train_losses.append(epoch_loss)
+        # Validation
+            with torch.no_grad():
+                if self.early_stop:
+                    output = self.forward(X_val)
+                    val_loss = self.loss_function(output, y_val.long())
+                    print("Loss on validation set at epoch %d : %f" %(epoch, val_loss))
+                    # prediction and accuracy on the dev set
+                    pred_labels = torch.argmax(output, dim=1)
+                    accuracy = torch.sum(pred_labels == y_val).item() / len(y_val)
+                    print("Accuracy on validation set, after epoch %d: %3.2f\n" % (epoch, accuracy * 100))
+                    # early stopping
+                    # if first epoch: we record the dev loss, to be used for early stopping
+                    if epoch == 0:
+                        previous_val_loss = val_loss
+                    elif val_loss > previous_val_loss:
+                        print("Loss on validation set has increased, we stop training!")
+                        break
+                    else:
+                        previous_val_loss = val_loss
+        # Plot the training losses
+        plt.plot(train_losses)
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss")
+        plt.title("Training losses over Epochs")
+        plt.show()    
+    
+    def transform(self, X, y):
+        """
+        This function evaluates the model on an annotated test set, and returns the accuracy on that set.
+        """
+        with torch.no_grad():
+            log_probs = self.forward(X)
+            pred_labels = torch.argmax(log_probs, dim=1)
+            test_loss = self.loss_function(log_probs, y.long())
+            accuracy = torch.sum(pred_labels == y).item() / len(y)
+            # Print the results
+            print("Result of the original model:")
+            print("Loss on test set after training: %f\n" %(test_loss))
+            print("Accuracy on test set after training: %3.2f\n" % (accuracy * 100))
+    
+    def predict(self, X):
+        """
+        This function predicts the labels of a set of documents, and returns a list of predicted labels.
+        """
+        with torch.no_grad():
+            log_probs = self.forward(X)
+            pred_labels = torch.argmax(log_probs, dim=1)
+            return pred_labels.tolist()
+        
 # Function for models loading:
 @st.cache_resource(ttl=3600) # Cache the model so it doesn't have to be loaded each time. Limit to 1 hour.
 def download_and_cache_models():
@@ -47,8 +153,10 @@ def download_and_cache_models():
     sentence_model = SentenceTransformer("all-MiniLM-L6-v2")
     topic_model_fake = BERTopic.load("misinfo-fake-minilm.pickle", embedding_model= sentence_model)
     topic_model_true = BERTopic.load("misinfo-true-minilm.pickle", embedding_model= sentence_model)
-
-    return topic_model_fake, topic_model_true, sentence_model
+    fake_detector = FakeDetect(early_stop=True)
+    fake_detector.load_state_dict(torch.load("fakenews_classif.pth"))
+    
+    return topic_model_fake, topic_model_true, sentence_model, fake_detector
 
 # Functions for reading pdf files:
 from io import BytesIO
@@ -96,32 +204,43 @@ def predict(documents, topic_model_fake, topic_model_true, sentence_model):
     test_topics_true, test_probs_true = topic_model_true.transform(documents['text'].astype(str).tolist(), test_embeddings)
     test_topics_fake, test_probs_fake = topic_model_fake.transform(documents['text'].astype(str).tolist(), test_embeddings)
     
-    # Print out predictions:
-    documents["prediction"] = ""
-    result_str = []
-    for i in range(len(documents['text'].tolist())):
-        # if both models cannot predict the document
+    # Concatenate the topic embeddings and the document embeddings:
+    topic_embeddings = np.zeros((len(documents["text"].tolist()), 768))
+    zeros = np.zeros((384))
+    for i in range(len(test_embeddings)):
         if not topic_model_true.get_topic(test_topics_true[i]) and not topic_model_fake.get_topic(test_topics_fake[i]):
-            documents["prediction"][i] = "Not in fake news topics"
-            result_str.append("Model could not predict reliably if the document is true or fake based on training data.\n")
-        # if predicted topic in true model but not in fake model    
+            topic_embeddings[i] = np.concatenate((test_embeddings[i], zeros))
         elif topic_model_true.get_topic(test_topics_true[i]) and not topic_model_fake.get_topic(test_topics_fake[i]):
-            documents["prediction"][i] = "Not in fake news topics"            
-            result_str.append(f"In topic {topic_model_true.topic_labels_[test_topics_true[i]]} at {test_probs_true[i][test_topics_true[i]]*100:0.4f}%.\n")
-        # if predicted topic in fake model but not in true model    
+            topic_embeddings[i] = np.concatenate((test_embeddings[i], topic_model_true.topic_embeddings_[test_topics_true[i]]))
         elif topic_model_fake.get_topic(test_topics_fake[i]) and not topic_model_true.get_topic(test_topics_true[i]):
-            documents["prediction"][i] = "In common fake news topics"
-            result_str.append(f"In the topic {topic_model_fake.topic_labels_[test_topics_fake[i]]} at {test_probs_fake[i][test_topics_fake[i]]*100:0.4f}%.\n")
-        # if predicted topic in both models
+            topic_embeddings[i] = np.concatenate((test_embeddings[i], topic_model_fake.topic_embeddings_[test_topics_fake[i]]))
         else:
             if test_probs_true[i][test_topics_true[i]] > test_probs_fake[i][test_topics_fake[i]]:
-                documents["prediction"][i] = "Not in fake news topics"
-                result_str.append(f"In the topic {topic_model_true.topic_labels_[test_topics_true[i]]} at {test_probs_true[i][test_topics_true[i]]*100:0.4f}%.\n")
+                topic_embeddings[i] = np.concatenate((test_embeddings[i], topic_model_true.topic_embeddings_[test_topics_true[i]]))
             else:
-                documents["prediction"][i] = "In common fake news topics"
-                result_str.append(f"In the topic {topic_model_fake.topic_labels_[test_topics_fake[i]]} at {test_probs_fake[i][test_topics_fake[i]]*100:0.4f}%.\n")
-    
+                topic_embeddings[i] = np.concatenate((test_embeddings[i], topic_model_fake.topic_embeddings_[test_topics_fake[i]]))
+                
+    # Print out predictions:
+    #TODO: Something with the topic get messed up after the MLP, so need to think of someway to access the topic labels.
+    pred_labels = fake_detector.predict(torch.Tensor(topic_embeddings))
+    documents["prediction"] = ""
+    result_str = []
+    for i in range(len(topic_embeddings)):
+        if pred_labels[i] == 0:
+            documents["prediction"][i] = "Likely in common fake news topics"
+            if topic_model_fake.get_topic(test_topics_fake[i]):
+                result_str.append(f"Document is likely in the topic {topic_model_fake.topic_labels_[test_topics_fake[i]]}")
+            else:
+                result_str.append(f"Document is likely in the topic {topic_model_true.topic_labels_[test_topics_true[i]]}")
+
+        else:
+            documents["prediction"][i] = "Not in fake news topics"
+            if topic_model_fake.get_topic(test_topics_fake[i]):
+                result_str.append(f"Document is likely in the topic {topic_model_fake.topic_labels_[test_topics_fake[i]]}")
+            else:
+                result_str.append(f"Document is likely in the topic {topic_model_true.topic_labels_[test_topics_true[i]]}")
     return result_str
+
 
 
 # Function for scraping webpages:
@@ -172,7 +291,7 @@ from requests.exceptions import MissingSchema
 # Scripts for the app:
 # Loading models:
 with st.spinner("Loading model. Please read descriptions in the meantime..."):
-    topic_model_fake, topic_model_true, sentence_model = download_and_cache_models()
+    topic_model_fake, topic_model_true, sentence_model, fake_detector = download_and_cache_models()
 documents = pd.DataFrame(columns=["file", "text"])
 
 st.subheader("File uploader / URL scraper")
