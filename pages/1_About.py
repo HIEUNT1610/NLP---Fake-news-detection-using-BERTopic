@@ -15,7 +15,7 @@ st.markdown("""
             
             The models used in the demo were trained on Misinfo dataset from Kaggle, based on EUvsDisinfo data, using miniLM Sentence Transformer embedding. This application seeks to combine unsupervised learning techniques and labelled data to detect fake news. Two BERTopic models were used to model topics based on the fake and true news datasets. Prediction is done by generating the topic of the input and comparing to the topics clustered by the model based on the two datasets. If the input topic is similar to the topics in the fake news dataset, the input is detected to be in common fake news topics.                      
             
-            At the moment, the accuracy in prediction of this demo app is not too high due to the limited hosting space from Streamlit and training data, but is is showing promise. Better and larger embedding models (such as paraphrase-multilingual-mpnet-base-v2) can give much better detection, but it goes over the limit of Streamlit Community Cloud. Performance can also be further improved upon by continually adding more data to the training set. 
+            At the moment, the accuracy in prediction of this demo app is not too high due to the limited hosting space from Streamlit and training data, but it is showing promise. Better and larger embedding models (such as paraphrase-multilingual-mpnet-base-v2) can give much better detection, but it goes over the limit of Streamlit Community Cloud. Performance can also be further improved upon by continually adding more data to the training set. 
             """)
 
 # Some other things to write in here, such as what is BERTopic and how it works, how the models were trained, etc.
