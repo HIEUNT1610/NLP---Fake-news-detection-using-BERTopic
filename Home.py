@@ -208,7 +208,7 @@ if st.button("Predict"):
             documents["result"] = result_str
             documents = documents[["file", "prediction", "result"]]
             st.dataframe(documents, use_container_width=True)
-    else:
+            st.write("The results can be interpreted as: the document in the first column is detected to be likely to be in the fake news/non-fake news topic in the second column, with the predicted percentage listed out in the third column along with the actual predicted topic. \n")    else:
         st.write("Please upload pdf files and/or enter urls.")
         
 # In here we are just going to show the visualizations of the topics. We will use the same models as in the Home.py file.
