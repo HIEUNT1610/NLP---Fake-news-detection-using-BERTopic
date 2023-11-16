@@ -1,21 +1,21 @@
 # Getting started
-from bertopic import BERTopic
 from bertopic.representation import MaximalMarginalRelevance
-from umap import UMAP
-from hdbscan import HDBSCAN
 from sklearn.feature_extraction.text import CountVectorizer
 from sentence_transformers import SentenceTransformer
+from bs4 import BeautifulSoup
+from bertopic import BERTopic
+from hdbscan import HDBSCAN
+from pypdf import PdfReader
+from io import BytesIO
+from umap import UMAP
+import streamlit as st
 import pandas as pd
 import numpy as np
+import requests
 import pickle
 import gdown
-import streamlit as st
-from pypdf import PdfReader
 import re
 import os
-import requests
-from bs4 import BeautifulSoup
-from io import BytesIO
 
 # Title and Layout:
 st.set_page_config(page_title="Fake news detection using BERTopic", layout="wide")
@@ -108,14 +108,17 @@ def predict(documents, topic_model_fake, topic_model_true, sentence_model):
         if not topic_model_true.get_topic(test_topics_true[i]) and not topic_model_fake.get_topic(test_topics_fake[i]):
             documents["prediction"][i] = "Not in fake news topics"
             result_str.append("Model could not predict reliably if the document is true or fake based on training data.\n")
+        
         # if predicted topic in true model but not in fake model    
         elif topic_model_true.get_topic(test_topics_true[i]) and not topic_model_fake.get_topic(test_topics_fake[i]):
             documents["prediction"][i] = "Not in fake news topics"            
             result_str.append(f"In topic {topic_model_true.topic_labels_[test_topics_true[i]]} at {test_probs_true[i][test_topics_true[i]]*100:0.4f}%.\n")
+        
         # if predicted topic in fake model but not in true model    
         elif topic_model_fake.get_topic(test_topics_fake[i]) and not topic_model_true.get_topic(test_topics_true[i]):
             documents["prediction"][i] = "In common fake news topics"
             result_str.append(f"In the topic {topic_model_fake.topic_labels_[test_topics_fake[i]]} at {test_probs_fake[i][test_topics_fake[i]]*100:0.4f}%.\n")
+        
         # if predicted topic in both models
         else:
             if test_probs_true[i][test_topics_true[i]] > test_probs_fake[i][test_topics_fake[i]]:
