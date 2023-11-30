@@ -4,3 +4,4 @@ bertopic==0.15.0
 pypdf==3.16.2
 torch --index-url https://download.pytorch.org/whl/cu118
 sentence-transformers==2.2.2
+scikit-learn==1.2.2
