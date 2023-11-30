@@ -24,7 +24,7 @@ The BERTopic models utilized in this demo were trained on the Misinfo dataset fr
 
 Two versions of the demo are available:
 
-1. **Streamlit Version (Small):** Yields reasonable results, though the potential for improvement exists due to limited hosting space on the Streamlit Community Cloud.
+1. **Streamlit Version (Small):** Yields reasonable results, though the potential for improvement exists due to limited hosting space on the Streamlit Community Cloud. This version can be found here: https://fake-news-detection-using-bertopic.streamlit.app/
 
 2. **Main Version (Large):** Provides superior and more easily interpreted topics, showing promise. Enhanced detection capabilities can be achieved with larger embedding models (e.g., paraphrase-multilingual-mpnet-base-v2). Continuous performance enhancement is possible by augmenting the training set with more data. A deployment on Google Cloud Service for the larger version will be accessible soon.
 
