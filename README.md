@@ -32,7 +32,7 @@ Two versions of the demo are available:
 
 1. **Clone the Repository:**
    ```
-   git clone <[repository_url](https://github.com/HIEUNT1610/NLP---Fake-news-detection-using-BERTopic.git)>
+   git clone https://github.com/HIEUNT1610/NLP---Fake-news-detection-using-BERTopic.git
    cd NLP---Fake-news-detection-using-BERTopic
    ```
 
