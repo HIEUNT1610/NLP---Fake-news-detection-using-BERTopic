@@ -13,7 +13,6 @@ import pandas as pd
 import numpy as np
 import requests
 import pickle
-import gdown
 import re
 import os
 
@@ -39,16 +38,13 @@ st.markdown("""
 def download_and_cache_models():
     """Download pre-trained models from Google Drive.
     This function returns 2 BERTopic models, one trained on fake news and one trained on true news.
-    The models were trained on Misinfo dataset from Kaggle, based on EUvsDisinfo data.
-    Models are cached so they don't have to be downloaded each time."""
-    #gdown.download(id = "1XJfCt7PFm0LlZBMDKJF-9BvukG8Pj0Yo", output = "misinfo-fake-pickle", quiet=False)
-    #gdown.download(id = "1Bt7LDObSscall84N344uwkXhJIxXfsHZ", output = "misinfo-true-pickle", quiet=False)  
+    The models were trained on Misinfo dataset from Kaggle, based on EUvsDisinfo data."""
         
     # Load models. Loading without embedding made things worse, but it's not possible to do otherwise with streamlit sharing:
-    sentence_model = SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
+    #sentence_model = SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
     #topic_model_fake = BERTopic.load("misinfo-fake.pickle", embedding_model= sentence_model)
     #topic_model_true = BERTopic.load("misinfo-true.pickle", embedding_model= sentence_model)
-    #sentence_model = SentenceTransformer("all-MiniLM-L6-v2")
+    sentence_model = SentenceTransformer("all-MiniLM-L6-v2")
     topic_model_fake = BERTopic.load("misinfo-fake-minilm.pickle", embedding_model= sentence_model)
     topic_model_true = BERTopic.load("misinfo-true-minilm.pickle", embedding_model= sentence_model)
 
